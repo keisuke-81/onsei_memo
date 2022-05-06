@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音声メモ日記</title>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css">
+    <!-- <link rel="stylesheet" href="/resources/demos/style.css"> -->
+</head>
+
+<style>
+    
+
+    .column {
+        display: flex;
+        flex-direction: column;
+        width: 25%;
+    }
+    .column2{
+        width: 60%;
+         margin-left: 10px;
+    }
+
+    .flex {
+        display: flex;
+    }
+    ul{
+        width: 60%;
+        
+    
+    }
+    .center{
+        width: 50%;
+        
+    }
+    #output li {
+      background: #ccc;
+      color: black;
+      padding-left: 10px;
+    }
+    body{
+        color: #fff;
+        background-image: url(img/star.jpg);
+        background-attachment: fixed;
+        background-size: cover;
+    }
+    .wrapper{
+        width: 90%;
+        margin: 0 auto;
+    }
+    img{
+        width: 100%;
+    }
+    .first {
+        color: #fff;
+    }
+    .first button,a{
+        background: black;
+        color: #fff;
+    }
+
+    .center p{
+color:lightyellow;
+    }
+    .center button{
+        background-color:lightyellow;
+    }
+
+</style>
+
+<body>
+
+    
+    <div class="wrapper">
+        <h2>音声MEMO-DIARY</h2>
+        <input type="text" id="name" placeholder="名前">
+        <p>日付を選択してください。</p>
+        <div class="flex">
+            <div class="column">
+                <div class="first">
+                    <input type="text" id="datepicker" placeholder="日付">
+                    <input type="text" id="title" placeholder="titleを入力">
+        
+                    <div class="flex">
+                         音声記録
+                        <button id="btn">start</button>
+                        <button><a href="index.html">clear</a></button>
+        
+                    </div>
+                    <textarea name="" id="area" cols="40" rows="7"></textarea>
+                    <p>save</p>
+                    <div>
+                        <button id="save1">１月記録</button>
+                        <button id="save2">２月記録</button>
+                        <button id="save3">３月記録</button>
+                        <button id="save4">４月記録</button>
+        
+                    </div>
+                    <div>
+                        <button id="save5">５月記録</button>
+                        <button id="save6">６月記録</button>
+                        <button id="save7">７月記録</button>
+                        <button id="save8">８月記録</button>
+                    </div>
+                    <div>
+        
+                        <button id="save9">９月記録</button>
+                        <button id="save10">10月記録</button>
+                        <button id="save11">11月記録</button>
+                        <button id="save12">12月記録</button>
+                    </div>
+                    <div>
+                        <button id="save13">その他のことを記録！</button>
+                    </div>
+                </div>
+                <div id="content">
+                </div>
+            </div>
+        
+            <div class="center">
+
+                <p>記録呼び出し</p>
+        
+                <div>
+                    <button id="lord1">１月記録</button>
+                    <button id="lord2">２月記録</button>
+                    <button id="lord3">３月記録</button>
+                    <button id="lord4">４月記録</button>
+        
+                </div>
+                <div>
+                    <button id="lord5">５月記録</button>
+                    <button id="lord6">６月記録</button>
+                    <button id="lord7">７月記録</button>
+                    <button id="lord8">８月記録</button>
+                </div>
+                <div>
+        
+                    <button id="lord9">９月記録</button>
+                    <button id="lord10">10月記録</button>
+                    <button id="lord11">11月記録</button>
+                    <button id="lord12">12月記録</button>
+                </div>
+                <div>
+                    <button id="lord13">その他のことの記録！</button>
+                </div>
+            </div>
+            <div class="column2">
+                <ul id="output">onseimemo記録<img src="img/note.jpg" alt=""></ul>
+                
+            </div>
+        </div>
+    </div>
+    <!-- firebase -->
+
+
+
+    <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.1/jquery-ui.js"></script>
+    <script src="https://rawgit.com/jquery/jquery-ui/master/ui/i18n/datepicker-ja.js"></script>
+
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.7.0/firebase-app.js";
+        // TODO: Add SDKs for Firebase products that you want to use
+        // https://firebase.google.com/docs/web/setup#available-libraries
+        import {
+            getFirestore,
+            collection,
+            addDoc,
+            serverTimestamp,
+            query,
+            orderBy,
+            onSnapshot,
+        } from "https://www.gstatic.com/firebasejs/9.7.0/firebase-firestore.js";
+     //時刻を見れるように変換するために----------------------------------------  
+        function convertTimestampToDatetime(timestamp) {
+                const _d = timestamp ? new Date(timestamp * 1000) : new Date();
+                const Y = _d.getFullYear();
+                const m = (_d.getMonth() + 1).toString().padStart(2, "0");
+                const d = _d.getDate().toString().padStart(2, "0");
+                const H = _d.getHours().toString().padStart(2, "0");
+                const i = _d.getMinutes().toString().padStart(2, "0");
+                const s = _d.getSeconds().toString().padStart(2, "0");
+                return `${Y}/${m}/${d} ${H}:${i}:${s}`;
+            }
+            
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: ＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊,
+            authDomain: "abe-memo-onsei.firebaseapp.com",
+            projectId: "abe-memo-onsei",
+            storageBucket: "abe-memo-onsei.appspot.com",
+            messagingSenderId: "657160839705",
+            appId: "1:657160839705:web:d4aced81febef8b680c088"
+        };
+
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        //firebaseのデータベースから取得する
+        const db = getFirestore(app);
+
+        //calender---------------------------------
+        $(function () {
+            $("#datepicker").datepicker();
+            $(".datepicker").datepicker();
+        });
+
+        //音声認識の準備
+        const speech = new webkitSpeechRecognition();
+        speech.lang = 'ja-JP';
+
+        //使用する変数を用意
+        const btn = document.getElementById('btn');
+        const content = document.getElementById('content');
+
+
+        btn.addEventListener('click', function () {
+            // 音声認識をスタート
+            speech.start();
+        });
+
+
+        // speech.addEventListener('result', function (e) {
+        //     // 音声認識で取得した情報を、コンソール画面に表示
+        //     //console.log(e);
+
+        //    // 音声認識で取得した情報を、HTMLに表示
+        //     const text = e.results[0][0].transcript;
+        //     content.innerText = text;
+        // });
+
+
+        //--------------------------------//
+        speech.onresult = function (e) {
+            speech.stop();
+            if (e.results[0].isFinal) {
+                let autotext = e.results[0][0].transcript
+                // console.log(e);
+                // console.log(autotext);
+                //  content.innerHTML += '<div>' + autotext + '</div>';
+                area.innerHTML += autotext;
+            }
+        }
+
+        speech.onend = () => {
+            speech.start();
+        };
+
+
+        
+        
+
+
+        //月に応じたイベント発生用の仕組みーーーーーーーーーーーーーーーーーーーーーーーーーーー
+        // onSnapshot(collection(db, "onsemimemo"), (querySnapshot) => {
+        //         console.log(querySnapshot.docs);
+        //     });
+
+        //save------------------------------------------------------------------
+        $('#save1').on('click', function () {
+            const data = {
+                name: $('#name').val(),
+                day: $('#datepicker').val(),
+                title: $('#title').val(),
+                content: $('#area').val(),
+                time: serverTimestamp(),
+            };
+            // console.log(data);
+            addDoc(collection(db, 'diary1'), data);
+        });
+        $('#save2').on('click', function () {
+            const data = {
+                name: $('#name').val(),
+                day: $('#datepicker').val(),
+                title: $('#title').val(),
+                content: $('#area').val(),
+                time: serverTimestamp(),
+            };
+            // console.log(data);
+            addDoc(collection(db, 'diary2'), data);
+        });
+        $('#save3').on('click', function () {
+                const data = {
+                    name: $('#name').val(),
+                    day: $('#datepicker').val(),
+                    title: $('#title').val(),
+                    content: $('#area').val(),
+                    time: serverTimestamp(),
+                };
+                // console.log(data);
+                addDoc(collection(db, 'diary3'), data);
+        });
+        $('#save4').on('click', function () {
+                const data = {
+                    name: $('#name').val(),
+                    day: $('#datepicker').val(),
+                    title: $('#title').val(),
+                    content: $('#area').val(),
+                    time: serverTimestamp(),
+                };
+                // console.log(data);
+                addDoc(collection(db, 'diary4'), data);
+        });
+        $('#save5').on('click', function () {
+                const data = {
+                    name: $('#name').val(),
+                    day: $('#datepicker').val(),
+                    title: $('#title').val(),
+                    content: $('#area').val(),
+                    time: serverTimestamp(),
+                };
+                // console.log(data);
+                addDoc(collection(db, 'diary5'), data);
+        });
+        $('#save6').on('click', function () {
+                const data = {
+                    name: $('#name').val(),
+                    day: $('#datepicker').val(),
+                    title: $('#title').val(),
+                    content: $('#area').val(),
+                    time: serverTimestamp(),
+                };
+                // console.log(data);
+                addDoc(collection(db, 'diary6'), data);
+        });
+        $('#save7').on('click', function () {
+            const data = {
+                name: $('#name').val(),
+                day: $('#datepicker').val(),
+                title: $('#title').val(),
+                content: $('#area').val(),
+                time: serverTimestamp(),
+            };
+            // console.log(data);
+            addDoc(collection(db, 'diary7'), data);
+        });
+
+        $('#save8').on('click', function () {
+                const data = {
+                    name: $('#name').val(),
+                    day: $('#datepicker').val(),
+                    title: $('#title').val(),
+                    content: $('#area').val(),
+                    time: serverTimestamp(),
+                };
+                // console.log(data);
+                addDoc(collection(db, 'diary8'), data);
+        });
+        $('#save9').on('click', function () {
+                const data = {
+                    name: $('#name').val(),
+                    day: $('#datepicker').val(),
+                    title: $('#title').val(),
+                    content: $('#area').val(),
+                    time: serverTimestamp(),
+                };
+                // console.log(data);
+                addDoc(collection(db, 'diary9'), data);
+        });
+     $('#save10').on('click', function () {
+            const data = {
+                name: $('#name').val(),
+                day: $('#datepicker').val(),
+                title: $('#title').val(),
+                content: $('#area').val(),
+                time: serverTimestamp(),
+            };
+            // console.log(data);
+            addDoc(collection(db, 'diary10'), data);
+        });
+        $('#save11').on('click', function () {
+                const data = {
+                    name: $('#name').val(),
+                    day: $('#datepicker').val(),
+                    title: $('#title').val(),
+                    content: $('#area').val(),
+                    time: serverTimestamp(),
+                };
+                // console.log(data);
+                addDoc(collection(db, 'diary11'), data);
+        });
+        $('#save12').on('click', function () {
+                const data = {
+                    name: $('#name').val(),
+                    day: $('#datepicker').val(),
+                    title: $('#title').val(),
+                    content: $('#area').val(),
+                    time: serverTimestamp(),
+                };
+                // console.log(data);
+                addDoc(collection(db, 'diary12'), data);
+        });
+        $('#save12').on('click', function () {
+                const data = {
+                    name: $('#name').val(),
+                    day: $('#datepicker').val(),
+                    title: $('#title').val(),
+                    content: $('#area').val(),
+                    time: serverTimestamp(),
+                };
+                // console.log(data);
+                addDoc(collection(db, 'diary12'), data);
+        });
+        $('#save13').on('click', function () {
+            const data = {
+                name: $('#name').val(),
+                day: $('#datepicker').val(),
+                title: $('#title').val(),
+                content: $('#area').val(),
+                time: serverTimestamp(),
+            };
+            // console.log(data);
+            addDoc(collection(db, 'diary13'), data);
+        });
+
+
+        //data取り出す-----------------------------------------------
+        //データ表示時の並び替え---------------------------------------
+      const a = query(collection(db, "diary1"), orderBy("day", "desc"));
+      onSnapshot(a, (querySnapshot) => {
+          
+        //1月-------------------------------------------------------
+        
+      //  onSnapsh
+            console.log(querySnapshot.docs);
+            const dataArray = [];
+            //欲しいデータだけ取り出す
+            querySnapshot.docs.forEach(function (doc) {
+                const data = {
+                    id: doc.id,
+                    data: doc.data(),
+                };
+                dataArray.push(data);
+            });
+            console.log(dataArray);
+            const tagArray = [];
+            dataArray.forEach(function (data) {
+                tagArray.push(`
+             <li id="${data.id}">
+                <p>${data.data.name}</p>  
+                <p>${data.data.day}</p>
+                <p>${data.data.title}</p>
+                <p>${data.data.content}</p>
+             </li>
+             `);
+            });
+            $('#lord1').on('click',function(){
+                $('#output').html(tagArray);
+            })
+            //console.log(tagArray);
+            //$("#output").html(tagArray);
+
+            //     const nameKey = $('#memoName').val();
+            //     const dayKey = $('memoDay').val();
+            //     let nameKeyhole = data.data.name
+            //     let dayKeyhole = data.data.day
+            //    $('#open').on('click',function() {
+            //     if(nameKey === nameKey && daykey === dayKeyhole){
+            //         $("output").html()
+            //     }
+            //    });
+
+     
+        });
+        //2月データ取り出し------------------------------------------------
+
+      const b = query(collection(db, "diary2"), orderBy("day", "desc"));
+        onSnapshot(b, (querySnapshot) => {
+        console.log(querySnapshot.docs);
+        const dataArray = [];
+        //欲しいデータだけ取り出す
+        querySnapshot.docs.forEach(function (doc) {
+            const data = {
+                id: doc.id,
+                data: doc.data(),
+            };
+            dataArray.push(data);
+        });
+        console.log(dataArray);
+        const tagArray = [];
+        dataArray.forEach(function (data) {
+            tagArray.push(`
+             <li id="${data.id}">
+                <p>${data.data.name}</p>
+                <p>${data.data.day}</p>
+                <p>${data.data.title}</p>
+                <p>${data.data.content}</p>
+             </li>
+             `);
+        });
+        $('#lord2').on('click', function () {
+            $('#output').html(tagArray);
+        })     
+    });
+    //3月データ取り出し----------------------------------------
+    const c = query(collection(db, "diary3"), orderBy("day", "desc"));
+        onSnapshot(c, (querySnapshot) => {
+        console.log(querySnapshot.docs);
+        const dataArray = [];
+        //欲しいデータだけ取り出す
+        querySnapshot.docs.forEach(function (doc) {
+            const data = {
+                id: doc.id,
+                data: doc.data(),
+            };
+            dataArray.push(data);
+        });
+        console.log(dataArray);
+        const tagArray = [];
+        dataArray.forEach(function (data) {
+            tagArray.push(`
+            <li id="${data.id}">
+            <p>${data.data.name}</p>
+            <p>${data.data.day}</p>
+            <p>${data.data.title}</p>
+            <p>${data.data.content}</p>
+            </li>
+            `);
+        });
+        $('#lord3').on('click', function () {
+            $('#output').html(tagArray);
+        })
+    });
+    //4月データ取り出し---------------------------------------------
+    const d = query(collection(db, "diary4"), orderBy("day", "desc"));
+        onSnapshot(d, (querySnapshot) => {
+        console.log(querySnapshot.docs);
+        const dataArray = [];
+        //欲しいデータだけ取り出す
+        querySnapshot.docs.forEach(function (doc) {
+            const data = {
+                id: doc.id,
+                data: doc.data(),
+            };
+            dataArray.push(data);
+        });
+        console.log(dataArray);
+        const tagArray = [];
+        dataArray.forEach(function (data) {
+            tagArray.push(`
+            <li id="${data.id}">
+            <p>${data.data.name}</p>
+            <p>${data.data.day}</p>
+            <p>${data.data.title}</p>
+            <p>${data.data.content}</p>
+            </li>
+            `);
+        });
+        $('#lord4').on('click', function () {
+            $('#output').html(tagArray);
+        })
+    });
+    //5月データ取り出し------------------------------------------
+    const e = query(collection(db, "diary5"), orderBy("day", "desc"));
+        onSnapshot(e, (querySnapshot) => {
+        console.log(querySnapshot.docs);
+        const dataArray = [];
+        //欲しいデータだけ取り出す
+        querySnapshot.docs.forEach(function (doc) {
+            const data = {
+                id: doc.id,
+                data: doc.data(),
+            };
+            dataArray.push(data);
+        });
+        console.log(dataArray);
+        const tagArray = [];
+        dataArray.forEach(function (data) {
+            tagArray.push(`
+            <li id="${data.id}">
+            <p>${data.data.name}</p>
+            <p>${data.data.day}</p>
+            <p>${data.data.title}</p>
+            <p>${data.data.content}</p>
+            </li>
+            `);
+        });
+        $('#lord5').on('click', function () {
+            $('#output').html(tagArray);
+        })
+    });
+    //６月データ取り出し----------------------------------
+    const f = query(collection(db, "diary6"), orderBy("day", "desc"));
+        onSnapshot(f, (querySnapshot) => {
+        console.log(querySnapshot.docs);
+        const dataArray = [];
+        //欲しいデータだけ取り出す
+        querySnapshot.docs.forEach(function (doc) {
+            const data = {
+                id: doc.id,
+                data: doc.data(),
+            };
+            dataArray.push(data);
+        });
+        console.log(dataArray);
+        const tagArray = [];
+        dataArray.forEach(function (data) {
+            tagArray.push(`
+            <li id="${data.id}">
+            <p>${data.data.name}</p>
+            <p>${data.data.day}</p>
+            <p>${data.data.title}</p>
+            <p>${data.data.content}</p>
+            </li>
+            `);
+        });
+        $('#lord6').on('click', function () {
+            $('#output').html(tagArray);
+        })
+    });
+    //7月データ取り出し-----------------------------------
+    const g = query(collection(db, "diary7"), orderBy("day", "desc"));
+        onSnapshot(g, (querySnapshot) => {
+        console.log(querySnapshot.docs);
+        const dataArray = [];
+        //欲しいデータだけ取り出す
+        querySnapshot.docs.forEach(function (doc) {
+            const data = {
+                id: doc.id,
+                data: doc.data(),
+            };
+            dataArray.push(data);
+        });
+        console.log(dataArray);
+        const tagArray = [];
+        dataArray.forEach(function (data) {
+            tagArray.push(`
+            <li id="${data.id}">
+            <p>${data.data.name}</p>
+            <p>${data.data.day}</p>
+            <p>${data.data.title}</p>
+            <p>${data.data.content}</p>
+            </li>
+            `);
+        });
+        $('#lord7').on('click', function () {
+            $('#output').html(tagArray);
+        })
+    });
+    //8月データ取り出し----------------------------------------
+    const h = query(collection(db, "diary8"), orderBy("day", "desc"));
+        onSnapshot(h, (querySnapshot) => {
+        console.log(querySnapshot.docs);
+        const dataArray = [];
+        //欲しいデータだけ取り出す
+        querySnapshot.docs.forEach(function (doc) {
+            const data = {
+                id: doc.id,
+                data: doc.data(),
+            };
+            dataArray.push(data);
+        });
+        console.log(dataArray);
+        const tagArray = [];
+        dataArray.forEach(function (data) {
+            tagArray.push(`
+        <li id="${data.id}">
+        <p>${data.data.name}</p>
+        <p>${data.data.day}</p>
+        <p>${data.data.title}</p>
+        <p>${data.data.content}</p>
+        </li>
+        `);
+        });
+        $('#lord8').on('click', function () {
+            $('#output').html(tagArray);
+        })
+    });
+    //9月データ取り出し---------------------------------------------
+    const i = query(collection(db, "diary9"), orderBy("day", "desc"));
+        onSnapshot(i, (querySnapshot) => {
+        console.log(querySnapshot.docs);
+        const dataArray = [];
+        //欲しいデータだけ取り出す
+        querySnapshot.docs.forEach(function (doc) {
+            const data = {
+                id: doc.id,
+                data: doc.data(),
+            };
+            dataArray.push(data);
+        });
+        console.log(dataArray);
+        const tagArray = [];
+        dataArray.forEach(function (data) {
+            tagArray.push(`
+        <li id="${data.id}">
+        <p>${data.data.name}</p>
+        <p>${data.data.day}</p>
+        <p>${data.data.title}</p>
+        <p>${data.data.content}</p>
+        </li>
+        `);
+        });
+        $('#lord9').on('click', function () {
+            $('#output').html(tagArray);
+        })
+    });
+    //10月データ取り出し------------------------------------------
+    const j = query(collection(db, "diary10"), orderBy("day", "desc"));
+        onSnapshot(j, (querySnapshot) => {
+        console.log(querySnapshot.docs);
+        const dataArray = [];
+        //欲しいデータだけ取り出す
+        querySnapshot.docs.forEach(function (doc) {
+            const data = {
+                id: doc.id,
+                data: doc.data(),
+            };
+            dataArray.push(data);
+        });
+        console.log(dataArray);
+        const tagArray = [];
+        dataArray.forEach(function (data) {
+            tagArray.push(`
+        <li id="${data.id}">
+        <p>${data.data.name}</p>
+        <p>${data.data.day}</p>
+        <p>${data.data.title}</p>
+        <p>${data.data.content}</p>
+        </li>
+        `);
+        });
+        $('#lord10').on('click', function () {
+            $('#output').html(tagArray);
+        })
+    });
+    //11月データ取り出し----------------------------------
+    const k = query(collection(db, "diary11"), orderBy("day", "desc"));
+        onSnapshot(k, (querySnapshot) => {
+        console.log(querySnapshot.docs);
+        const dataArray = [];
+        //欲しいデータだけ取り出す
+        querySnapshot.docs.forEach(function (doc) {
+            const data = {
+                id: doc.id,
+                data: doc.data(),
+            };
+            dataArray.push(data);
+        });
+        console.log(dataArray);
+        const tagArray = [];
+        dataArray.forEach(function (data) {
+            tagArray.push(`
+        <li id="${data.id}">
+        <p>${data.data.name}</p>
+        <p>${data.data.day}</p>
+        <p>${data.data.title}</p>
+        <p>${data.data.content}</p>
+        </li>
+        `);
+        });
+        $('#lord11').on('click', function () {
+            $('#output').html(tagArray);
+        })
+    });
+     //12月データ取り出し----------------------------------
+    const l = query(collection(db, "diary12"), orderBy("day", "desc"));
+        onSnapshot(l, (querySnapshot) => {
+        console.log(querySnapshot.docs);
+        const dataArray = [];
+        //欲しいデータだけ取り出す
+        querySnapshot.docs.forEach(function (doc) {
+            const data = {
+                id: doc.id,
+                data: doc.data(),
+            };
+            dataArray.push(data);
+        });
+        console.log(dataArray);
+        const tagArray = [];
+        dataArray.forEach(function (data) {
+            tagArray.push(`
+    <li id="${data.id}">
+    <p>${data.data.name}</p>
+    <p>${data.data.day}</p>
+    <p>${data.data.title}</p>
+    <p>${data.data.content}</p>
+    </li>
+    `);
+        });
+        $('#lord12').on('click', function () {
+            $('#output').html(tagArray);
+        })
+    });
+     //その他のデータ取り出し----------------------------------
+    const m = query(collection(db, "diary13"), orderBy("day", "desc"));
+        onSnapshot(m, (querySnapshot) => {
+            console.log(querySnapshot.docs);
+            const dataArray = [];
+            //欲しいデータだけ取り出す
+            querySnapshot.docs.forEach(function (doc) {
+                const data = {
+                    id: doc.id,
+                    data: doc.data(),
+                };
+                dataArray.push(data);
+            });
+            console.log(dataArray);
+            const tagArray = [];
+            dataArray.forEach(function (data) {
+                tagArray.push(`
+    <li id="${data.id}">
+    <p>${data.data.name}</p>
+    <p>${data.data.day}</p>
+    <p>${data.data.title}</p>
+    <p>${data.data.content}</p>
+    </li>
+    `);
+        });
+        $('#lord13').on('click', function () {
+            $('#output').html(tagArray);
+        })
+    });
+
+       
+
+    </script>
+
+</body>
+
+</html>
