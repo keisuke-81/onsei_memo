@@ -1,5 +1,6 @@
 # プロダクトのタイトル
 音声メモ日記
+https://keisuke-81.github.io/onsei_memo/
 ## プロダクトの紹介
 
 - startボタンを押すことで、文字起こしを開始します。
